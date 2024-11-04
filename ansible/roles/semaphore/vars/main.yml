@@ -1,0 +1,4 @@
+---
+db_name: semaphore_db
+db_user: semaphore_user
+db_password: password

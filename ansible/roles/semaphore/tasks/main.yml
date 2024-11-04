@@ -1,0 +1,77 @@
+---
+- name: Ensure PostgreSQL service is running
+  service:
+    name: postgresql
+    state: started
+    enabled: true
+
+- name: Install acl on Debian/Ubuntu
+  become: true 
+  apt:
+    name: acl
+    state: present
+
+- name: Configure pg_hba.conf
+  lineinfile:
+    path: "/etc/postgresql/12/main/pg_hba.conf"
+    regexp: '^local +all +all'
+    line: 'local   all             all                                     md5'
+    state: present
+
+- name: Restart PostgreSQL to apply changes
+  service:
+    name: postgresql
+    state: restarted
+
+- name: Set password for PostgreSQL user 'postgres'
+  become: true
+  become_user: postgres
+  postgresql_user:
+    name: postgres
+    password: password
+    state: present
+
+- name: Create postgres user for my app
+  become: yes
+  become_user: postgres
+  postgresql_user:
+    name: "{{ db_user }}"
+    password: "{{ db_password }}"
+
+- name: Create PostgreSQL database for Semaphore
+  become: true
+  become_user: postgres
+  postgresql_db:
+    name: "{{ db_name }}"
+    state: present
+    encoding: 'UTF-8'
+    owner: "postgres"
+
+- name: Ensure we have access from the new user
+  become: yes
+  become_user: postgres
+  postgresql_privs:
+    db: "{{ db_name }}"
+    role: postgres
+    objs: ALL_IN_SCHEMA
+    privs: SELECT,INSERT,UPDATE,DELETE
+  
+- name: Create directory for Semaphore data
+  file:
+    path: /opt/semaphore
+    state: directory
+
+- name: Copy environment file for Semaphore
+  template:
+    src: env.j2
+    dest: /opt/semaphore/.env
+
+- name: Run Semaphore container
+  docker_container:
+    name: semaphore
+    image: semaphoreui/semaphore:latest
+    env_file: /opt/semaphore/.env
+    ports:
+      - "3000:3000"
+    restart_policy: always
+    state: started

@@ -32,4 +32,16 @@ Vagrant.configure("2") do |config|
       cat /home/vagrant/.ssh/vagrant_test.pub >> /home/vagrant/.ssh/authorized_keys
     SHELL
   end
+
+  config.vm.define "server_gui" do |server|
+    server.vm.box = "codeup/Ubuntu-20.04-GUI"
+    config.vm.box_version = "1.2"
+    server.vm.hostname = "ubuntu_gui"
+    server.vm.network "private_network", ip: "192.168.56.44"
+    server.vm.provision "shell", inline: <<-SHELL
+      chmod 644 /home/vagrant/.ssh/vagrant_test.pub 
+      cat /home/vagrant/.ssh/vagrant_test.pub >> /home/vagrant/.ssh/authorized_keys
+    SHELL
+  end
+
 end
