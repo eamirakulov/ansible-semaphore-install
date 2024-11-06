@@ -27,6 +27,7 @@
     volumes:
       - postgres_data:/var/lib/postgresql/data
     state: started
+    restart_policy: always
     networks:
       - name: semaphore_net
 
