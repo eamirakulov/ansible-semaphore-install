@@ -1,8 +1,27 @@
 ---
-- hosts: all
+- name: Install Docker, PSQL and Semaphore on Ubuntu
+  hosts: all
   become: true
+  vars:
+    db_name: semaphore_db
+    db_user: semaphore_user
+    db_password: password
+    db_dialect: postgres
+
   roles:
-    - docker
-    - postgresql
-    - semaphore
+    - role: docker
+
+    - role: postgresql
+      postgresql_enablerepo: "updates"
+      postgresql_databases:
+        - name: "{{ db_name }}"
+      postgresql_users:
+        - name: "{{ db_user }}"
+          password: "{{ db_password }}"
+          priv: "ALL"
+          db: "{{ db_name }}"
+      postgresql_packages:
+        - postgresql-12
+
+    - role: semaphore
     
